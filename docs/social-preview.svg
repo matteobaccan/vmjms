@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640"
+     role="img" aria-label="vmjms - in-memory JMS provider for Java">
+  <title>vmjms</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B1020"/>
+      <stop offset="1" stop-color="#241043"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#9333EA"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#818CF8" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#9333EA" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1120" cy="110" r="300" fill="url(#glow)"/>
+
+  <!-- logo mark, scaled from the 128px grid -->
+  <g transform="translate(96 232) scale(1.35)">
+    <g fill="#6366F1">
+      <rect x="22" y="2" width="9" height="12" rx="3"/>
+      <rect x="43" y="2" width="9" height="12" rx="3"/>
+      <rect x="64" y="2" width="9" height="12" rx="3"/>
+      <rect x="85" y="2" width="9" height="12" rx="3"/>
+    </g>
+    <g fill="#9333EA">
+      <rect x="22" y="114" width="9" height="12" rx="3"/>
+      <rect x="43" y="114" width="9" height="12" rx="3"/>
+      <rect x="64" y="114" width="9" height="12" rx="3"/>
+      <rect x="85" y="114" width="9" height="12" rx="3"/>
+    </g>
+    <rect x="10" y="10" width="108" height="108" rx="26" fill="url(#chip)"/>
+    <g fill="#FFFFFF">
+      <rect x="28" y="42" width="48" height="11" rx="5.5"/>
+      <rect x="28" y="58.5" width="34" height="11" rx="5.5"/>
+      <rect x="28" y="75" width="20" height="11" rx="5.5"/>
+    </g>
+    <path d="M82 47.5 h10 M88 42.5 l6 5 -6 5" fill="none" stroke="#FFFFFF"
+          stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+  </g>
+
+  <g font-family="Segoe UI, Inter, system-ui, -apple-system, Helvetica, Arial, sans-serif">
+    <text x="330" y="288" font-size="104" font-weight="700" fill="#F4F3FF">vmjms</text>
+    <text x="334" y="350" font-size="38" font-weight="400" fill="#C7C3F5">In-memory JMS provider for Java</text>
+    <text x="334" y="408" font-size="25" font-weight="400" fill="#8B87B8">Jakarta JMS 3.1 API &#183; no broker, no network, no disk</text>
+
+    <g font-size="22" font-weight="600">
+      <g>
+        <rect x="334" y="452" width="150" height="46" rx="23" fill="#312E81" stroke="#4F46E5"/>
+        <text x="409" y="481" fill="#C7D2FE" text-anchor="middle">Java 17+</text>
+      </g>
+      <g>
+        <rect x="498" y="452" width="206" height="46" rx="23" fill="#312E81" stroke="#4F46E5"/>
+        <text x="601" y="481" fill="#C7D2FE" text-anchor="middle">it.baccan:vmjms</text>
+      </g>
+      <g>
+        <rect x="718" y="452" width="124" height="46" rx="23" fill="#312E81" stroke="#4F46E5"/>
+        <text x="780" y="481" fill="#C7D2FE" text-anchor="middle">MIT</text>
+      </g>
+    </g>
+  </g>
+</svg>
