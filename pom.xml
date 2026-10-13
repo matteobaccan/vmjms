@@ -111,7 +111,19 @@
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.6.3</version>
                 <configuration>
-                    <doclint>none</doclint>
+                    <!--
+                        Syntax, references and tag consistency are enforced and a warning
+                        fails the build, so the published javadoc cannot rot unnoticed.
+                        The missing group is off on purpose: 196 of the 270 public members
+                        implement a jakarta.jms interface whose contract is the
+                        specification, and the api jar carries no sources for javadoc to
+                        inherit from, so requiring a comment on each would buy noise. What
+                        those methods need is their deviations documented, which the class
+                        javadoc does.
+                    -->
+                    <doclint>all,-missing</doclint>
+                    <failOnWarnings>true</failOnWarnings>
+                    <notimestamp>true</notimestamp>
                     <quiet>true</quiet>
                 </configuration>
                 <executions>
