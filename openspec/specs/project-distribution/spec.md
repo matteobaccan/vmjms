@@ -1,5 +1,6 @@
 # Specification: Project Distribution
 
+## Purpose
 This specification defines how vmjms is identified, licensed, documented,
 branded, built and published as a Maven artifact.
 
