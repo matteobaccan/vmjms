@@ -141,7 +141,8 @@ ConnectionFactory a = new InMemoryConnectionFactory("app-broker");
 ConnectionFactory b = new InMemoryConnectionFactory("app-broker"); // same broker as a
 ```
 
-Brokers are resolved through the static `InMemoryBrokerRegistry`. In test
+Brokers are resolved through the static `InMemoryBrokerRegistry`, which also
+owns their lifecycle (see [Broker lifecycle](#broker-lifecycle)). In test
 suites, release them between runs:
 
 ```java
@@ -171,6 +172,174 @@ Parameters are exposed for inspection; they do not change delivery behaviour.
 The broker generates sequential identifiers in the form
 `ID:<brokerId>:<brokerInstance>:<sequence>`, unique and monotonic per broker.
 
+## Capacity: limiting what a broker holds
+
+By default a broker is unbounded: a producer with no consumer grows the heap
+until the JVM dies. A maximum number of waiting messages can be configured when
+the broker is created.
+
+```java
+// At most 1000 messages waiting across ALL queues of this broker
+ConnectionFactory capped = new InMemoryConnectionFactory("app-broker", 1000);
+```
+
+The limit is **broker-wide**, not per queue: it applies to the sum of every
+queue of that broker. A single queue may therefore consume the whole budget and
+starve the others; there is no per-queue cap.
+
+A send that would exceed the limit fails immediately with
+`CapacityExceededException`, which derives from
+`jakarta.jms.ResourceAllocationException` and is therefore catchable as
+`JMSException`. It never blocks waiting for room, and the rejected message is
+not queued:
+
+```java
+try {
+    producer.send(session.createTextMessage("one more"));
+} catch (CapacityExceededException e) {
+    e.getErrorCode();    // "VMJMS-1001"
+    e.getLimit();        // 1000
+    e.getQueueName();    // "orders"
+    e.getWaitingCount(); // messages waiting when the send was rejected
+}
+```
+
+The limit is fixed when the broker is created and cannot be changed afterwards.
+A default for brokers created without an explicit one can be set for the whole
+JVM, which is how an existing suite gets a cap without touching the code that
+builds its factories:
+
+```
+-Dvmjms.broker.maxMessages=1000
+```
+
+That property is a *default*, not a request: a factory which supplies no
+maximum inherits whatever the broker has, whatever the property says. Supplying
+an explicit maximum for a Broker ID that already exists with a different one is
+a configuration mistake and fails at once, while the factory is built, with an
+unchecked `jakarta.jms.JMSRuntimeException` carrying the error code
+`VMJMS-1002`.
+
+Error codes are namespaced `VMJMS-<number>` and grouped by kind, with
+`VMJMS-1xxx` reserved for capacity and resource failures; the constants live in
+`VmjmsErrorCodes`.
+
+## Message expiry
+
+`setTimeToLive` is honoured. A message whose expiration has passed is never
+delivered, and it is removed from memory automatically - also when no consumer
+ever connects, which is exactly the situation a capacity limit exists for.
+
+```java
+producer.setTimeToLive(5000); // this message is deliverable for 5 seconds
+```
+
+Reclamation runs on a single daemon thread for the whole JVM, named
+`vmjms-sweeper`, created only once a message with a non-zero time-to-live has
+been sent. Sweeps are separated by a fixed delay of one second, which can be
+changed for the whole JVM - a test suite that asserts on reclamation will want
+it much shorter:
+
+```
+-Dvmjms.sweep.intervalMillis=50
+```
+
+The interval is a property of the JVM, not of a broker: there is one sweeper and
+it visits every broker. It is re-read before each sweep, so it takes effect
+while the system is running. A broker holding no message that can expire is not
+scanned at all, and a message sent with the default time-to-live of zero never
+expires.
+
+There is **no dead-letter queue**: an expired message is discarded, not moved
+elsewhere. The capacity it occupied is released, so reclaimed memory becomes
+available to new sends.
+
+## Broker lifecycle
+
+Brokers belong to the static `InMemoryBrokerRegistry`, not to the factories or
+connections that use them. Closing a connection closes its sessions, producers
+and consumers, and **does not** touch the broker: messages sent before the close
+stay available to a consumer created later from any connection resolving the
+same Broker ID. That is what makes "send, close, reopen, receive" work.
+
+Releasing a broker is therefore an explicit gesture:
+
+```java
+InMemoryBrokerRegistry.find("app-broker");    // lookup that does NOT create one, null if absent
+InMemoryBrokerRegistry.brokerIds();           // the Broker IDs currently held
+InMemoryBrokerRegistry.destroy("app-broker"); // destroy one, true if it existed
+InMemoryBrokerRegistry.clear();               // destroy all of them
+```
+
+A destroyed broker is *terminated*, not merely forgotten: its messages are
+discarded, its MBean is unregistered, threads blocked in `receive()` on its
+queues are released with `jakarta.jms.IllegalStateException`, and any further
+send or receive through it fails the same way. Without that, a connection still
+holding the old broker would keep exchanging messages against it while the same
+Broker ID resolved to a new one - two brokers with one name and no error
+anywhere. Destroying is idempotent, and resolving the same Broker ID afterwards
+creates a new, empty broker.
+
+`clear()` also stops the reclamation thread, so a suite leaves no thread and no
+MBean behind; reclamation starts again by itself for brokers created afterwards.
+
+## Monitoring over JMX
+
+Monitoring is off by default and can be turned on and off while a broker is
+running, without recreating anything:
+
+```java
+InMemoryBroker broker = ((InMemoryConnectionFactory) factory).getBroker();
+broker.enableJmx();
+// ...
+broker.disableJmx();
+```
+
+Both calls are idempotent. The MBean is registered in the platform MBean server
+under:
+
+```
+it.baccan.vmjms:type=Broker,id="<Broker ID>"
+```
+
+The Broker ID is always quoted, because it is written by the caller and may
+contain characters JMX reserves (`:`, `,`, `=`, `"`, `*`, `?`); quoting
+unconditionally keeps the shape of the name independent of its content. The
+unquoted identifier is available as the `BrokerId` attribute.
+
+| Attribute | Meaning |
+|---|---|
+| `BrokerId` | the Broker ID as supplied |
+| `MaxMessages` | configured maximum, `Integer.MAX_VALUE` when unbounded (read-only) |
+| `MessagesWaiting` | messages waiting across all queues |
+| `QueueCount`, `QueueDepths` | number of queues, and the depth of each |
+| `EnqueuedCount` | messages accepted by send |
+| `DeliveredCount` | messages handed to a consumer |
+| `ExpiredCount` | messages reclaimed because they had expired |
+| `PurgedCount` | messages removed by a purge |
+| `RejectedCount` | sends rejected for capacity - the signal that the limit is biting |
+| `SweepFailureCount`, `LastSweepError` | reclamation failures, if any |
+
+The counters account for every message exactly once, so they reconcile with the
+current depth:
+
+```
+MessagesWaiting == EnqueuedCount - DeliveredCount - ExpiredCount - PurgedCount
+```
+
+`RejectedCount` does not appear in that identity: a rejected message never
+entered a queue. A purge is counted separately from an expiry on purpose, so
+`ExpiredCount` stays usable as the signal that time-to-live values are too short
+or consumers too slow.
+
+Two operations are exposed, both accounting for what they remove exactly as
+delivery and automatic reclamation do:
+
+- `purgeQueue(String)` - discard every message waiting in a queue, returning how
+  many were removed
+- `sweepExpiredNow()` - run an expiry sweep immediately instead of waiting for
+  the next one
+
 ## What is supported
 
 | Area | Status |
@@ -180,9 +349,13 @@ The broker generates sequential identifiers in the form
 | `MessageProducer.send(...)` (synchronous) | supported |
 | `MessageConsumer.receive()` / `receive(timeout)` / `receiveNoWait()` | supported, blocking |
 | `TextMessage`, `BytesMessage`, plain `Message` | supported |
-| Headers and properties (`JMSMessageID`, `JMSTimestamp`, `JMSPriority`, ...) | supported |
+| Headers and properties (`JMSMessageID`, `JMSTimestamp`, `JMSExpiration`, ...) | carried |
 | Cascading `close()` with interruption of blocked receivers | supported |
 | Shared brokers across factories | supported |
+| Broker-wide capacity limit with a numbered rejection | supported |
+| `setTimeToLive` and automatic reclamation of expired messages | supported |
+| Explicit broker lifecycle (`find`, `brokerIds`, `destroy`, `clear`) | supported |
+| On-demand JMX monitoring | supported |
 
 ### Not supported
 
@@ -200,6 +373,11 @@ These methods exist (the interfaces are fully implemented) but throw
 
 Message selectors are accepted by `createConsumer(...)` but ignored: every
 consumer receives the next message in the queue.
+
+`JMSPriority` and `deliveryDelay` are accepted and carried, but they do not
+change delivery: it stays FIFO, and a delayed message is deliverable at once.
+Unlike expiry, neither has any bearing on how much memory a broker holds, which
+is what the capacity accounting is about.
 
 Consumers are synchronous and blocking by design: `receive()` waits on the
 underlying `BlockingQueue`, and closing a consumer or session interrupts the
