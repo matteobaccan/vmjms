@@ -88,12 +88,13 @@ public class InMemoryConnection implements Connection {
     public ConnectionMetaData getMetaData() throws JMSException {
         checkNotClosed();
         return new ConnectionMetaData() {
+            // Jakarta Messaging 3.1, the version of the api this provider is built on.
             @Override
-            public String getJMSVersion() { return "3.0"; }
+            public String getJMSVersion() { return "3.1"; }
             @Override
             public int getJMSMajorVersion() { return 3; }
             @Override
-            public int getJMSMinorVersion() { return 0; }
+            public int getJMSMinorVersion() { return 1; }
             @Override
             public String getJMSProviderName() { return "InMemoryJMS"; }
             @Override
