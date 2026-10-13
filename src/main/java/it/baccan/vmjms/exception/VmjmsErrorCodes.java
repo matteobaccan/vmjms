@@ -1,4 +1,4 @@
-package it.baccan.vmjms;
+package it.baccan.vmjms.exception;
 
 /**
  * Error codes carried by vmjms exceptions through {@code JMSException.getErrorCode()} and
@@ -9,6 +9,7 @@ package it.baccan.vmjms;
  *
  * <ul>
  *   <li>{@code VMJMS-1xxx} - capacity and resource failures.</li>
+ *   <li>{@code VMJMS-2xxx} - operations this provider does not implement.</li>
  * </ul>
  */
 public final class VmjmsErrorCodes {
@@ -25,6 +26,19 @@ public final class VmjmsErrorCodes {
      * the {@code jakarta.jms.JMSRuntimeException} thrown while the factory is constructed.
      */
     public static final String CONFLICTING_BROKER_LIMIT = "VMJMS-1002";
+
+    /**
+     * An operation of the JMS API that this provider does not implement was called.
+     * Carried by {@link UnsupportedFeatureException} and, for the methods of the
+     * simplified API that declare no checked exception, by the
+     * {@code jakarta.jms.JMSRuntimeException} they throw instead.
+     *
+     * <p>One code covers every missing feature on purpose: the message names the feature,
+     * and a caller has the same single decision to take whichever one it is. What it must
+     * not have to do is tell "not implemented here" apart from a real failure of the
+     * provider.</p>
+     */
+    public static final String UNSUPPORTED_FEATURE = "VMJMS-2001";
 
     private VmjmsErrorCodes() {
         // Prevent instantiation

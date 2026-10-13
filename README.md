@@ -220,9 +220,21 @@ a configuration mistake and fails at once, while the factory is built, with an
 unchecked `jakarta.jms.JMSRuntimeException` carrying the error code
 `VMJMS-1002`.
 
-Error codes are namespaced `VMJMS-<number>` and grouped by kind, with
-`VMJMS-1xxx` reserved for capacity and resource failures; the constants live in
-`VmjmsErrorCodes`.
+Error codes are namespaced `VMJMS-<number>` and grouped by kind: `VMJMS-1xxx`
+for capacity and resource failures, `VMJMS-2xxx` for operations this provider
+does not implement.
+
+The exceptions of the provider and the code constants live together in
+`it.baccan.vmjms.exception`:
+
+```java
+import it.baccan.vmjms.exception.CapacityExceededException;
+import it.baccan.vmjms.exception.UnsupportedFeatureException;
+import it.baccan.vmjms.exception.VmjmsErrorCodes;
+```
+
+Both derive from `jakarta.jms.JMSException`, so code written against a real
+broker catches them without naming them.
 
 ## Message expiry
 
@@ -359,8 +371,28 @@ delivery and automatic reclamation do:
 
 ### Not supported
 
-These methods exist (the interfaces are fully implemented) but throw
-`UnsupportedOperationException`:
+These methods exist, because the interfaces are implemented in full, but they
+fail rather than pretend: they throw `UnsupportedFeatureException`, which
+derives from `jakarta.jms.JMSException` and carries the error code
+`VMJMS-2001`, with the missing feature in `getFeature()` and a hint in the
+message:
+
+```java
+try {
+    session.createTopic("prices");
+} catch (UnsupportedFeatureException e) {
+    e.getErrorCode(); // "VMJMS-2001"
+    e.getFeature();   // "Topics"
+    e.getMessage();   // "Not implemented by this in-memory provider: Topics. Use a Queue."
+}
+```
+
+The exception is checked, so the compiler already forces the `catch` where
+these methods are called. The only ones that cannot use it are the
+`createContext` forms of the simplified API, which declare no checked
+exception: they throw `jakarta.jms.JMSRuntimeException` with the same error
+code.
+
 
 - **Topics** and publish/subscribe: `createTopic`, durable and shared
   consumers, `unsubscribe`

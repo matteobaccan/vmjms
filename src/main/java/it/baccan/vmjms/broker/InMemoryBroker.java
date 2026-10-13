@@ -1,6 +1,6 @@
 package it.baccan.vmjms.broker;
 
-import it.baccan.vmjms.CapacityExceededException;
+import it.baccan.vmjms.exception.CapacityExceededException;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.Message;

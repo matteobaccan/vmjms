@@ -1,6 +1,8 @@
 package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
+import it.baccan.vmjms.exception.UnsupportedFeatureException;
+import it.baccan.vmjms.exception.CapacityExceededException;
 import jakarta.jms.*;
 
 /**
@@ -32,7 +34,7 @@ import jakarta.jms.*;
  *   <li>Nothing is persisted, so {@code PERSISTENT} and {@code NON_PERSISTENT} behave
  *       alike and a JVM restart starts empty.</li>
  *   <li>The asynchronous {@code send} forms taking a {@code CompletionListener} throw
- *       {@code UnsupportedOperationException}.</li>
+ *       {@link UnsupportedFeatureException}.</li>
  * </ul>
  */
 public class InMemoryMessageProducer implements MessageProducer {
@@ -205,21 +207,25 @@ public class InMemoryMessageProducer implements MessageProducer {
 
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous send with CompletionListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous send with a CompletionListener",
+                "Use one of the synchronous send forms.");
     }
 
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous send with CompletionListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous send with a CompletionListener",
+                "Use one of the synchronous send forms.");
     }
 
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous send with CompletionListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous send with a CompletionListener",
+                "Use one of the synchronous send forms.");
     }
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous send with CompletionListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous send with a CompletionListener",
+                "Use one of the synchronous send forms.");
     }
 }

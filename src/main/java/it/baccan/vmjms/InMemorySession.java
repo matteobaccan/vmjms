@@ -4,6 +4,7 @@ import it.baccan.vmjms.broker.InMemoryBroker;
 import it.baccan.vmjms.message.InMemoryBytesMessage;
 import it.baccan.vmjms.message.InMemoryMessage;
 import it.baccan.vmjms.message.InMemoryTextMessage;
+import it.baccan.vmjms.exception.UnsupportedFeatureException;
 import jakarta.jms.*;
 import java.io.Serializable;
 import java.util.List;
@@ -27,17 +28,17 @@ import java.util.Collections;
  *
  * <ul>
  *   <li>No transactions: {@code commit()} and {@code rollback()} throw
- *       {@code UnsupportedOperationException}, even on a session created with
+ *       {@link UnsupportedFeatureException}, even on a session created with
  *       {@code transacted} set to true, which is reported back faithfully by
  *       {@link #getTransacted()}.</li>
  *   <li>Delivery always behaves as {@code AUTO_ACKNOWLEDGE}. The acknowledge mode is
  *       recorded and reported, {@link #recover()} does nothing, and
  *       {@code Message.acknowledge()} does nothing.</li>
  *   <li>Queues only: every {@code Topic} form, durable and shared subscriptions and
- *       {@code unsubscribe} throw {@code UnsupportedOperationException}.</li>
+ *       {@code unsubscribe} throw {@link UnsupportedFeatureException}.</li>
  *   <li>Two body types only: {@code createTextMessage} and {@code createBytesMessage}
  *       work, while {@code MapMessage}, {@code ObjectMessage} and {@code StreamMessage}
- *       throw {@code UnsupportedOperationException}.</li>
+ *       throw {@link UnsupportedFeatureException}.</li>
  *   <li>No asynchronous delivery: the {@code MessageListener} accessors and the
  *       {@code QueueBrowser}, temporary-destination and {@code run()} forms are either
  *       unsupported or do nothing.</li>
@@ -87,7 +88,8 @@ public class InMemorySession implements Session {
 
     @Override
     public MapMessage createMapMessage() throws JMSException {
-        throw new UnsupportedOperationException("MapMessage is not supported");
+        throw new UnsupportedFeatureException("MapMessage",
+                "Use a TextMessage or a BytesMessage.");
     }
 
     @Override
@@ -98,17 +100,20 @@ public class InMemorySession implements Session {
 
     @Override
     public ObjectMessage createObjectMessage() throws JMSException {
-        throw new UnsupportedOperationException("ObjectMessage is not supported");
+        throw new UnsupportedFeatureException("ObjectMessage",
+                "Use a TextMessage or a BytesMessage.");
     }
 
     @Override
     public ObjectMessage createObjectMessage(Serializable object) throws JMSException {
-        throw new UnsupportedOperationException("ObjectMessage is not supported");
+        throw new UnsupportedFeatureException("ObjectMessage",
+                "Use a TextMessage or a BytesMessage.");
     }
 
     @Override
     public StreamMessage createStreamMessage() throws JMSException {
-        throw new UnsupportedOperationException("StreamMessage is not supported");
+        throw new UnsupportedFeatureException("StreamMessage",
+                "Use a TextMessage or a BytesMessage.");
     }
 
     @Override
@@ -137,12 +142,14 @@ public class InMemorySession implements Session {
 
     @Override
     public void commit() throws JMSException {
-        throw new UnsupportedOperationException("Transactions are not supported by this in-memory session");
+        throw new UnsupportedFeatureException("Transactions",
+                "Delivery always behaves as AUTO_ACKNOWLEDGE.");
     }
 
     @Override
     public void rollback() throws JMSException {
-        throw new UnsupportedOperationException("Transactions are not supported by this in-memory session");
+        throw new UnsupportedFeatureException("Transactions",
+                "Delivery always behaves as AUTO_ACKNOWLEDGE.");
     }
 
     @Override
@@ -195,12 +202,14 @@ public class InMemorySession implements Session {
 
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous MessageListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous delivery through a MessageListener",
+                "Use receive(), receive(timeout) or receiveNoWait().");
     }
 
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous MessageListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous delivery through a MessageListener",
+                "Use receive(), receive(timeout) or receiveNoWait().");
     }
 
     @Override
@@ -242,72 +251,86 @@ public class InMemorySession implements Session {
 
     @Override
     public Topic createTopic(String topicName) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported. Use Queues instead.");
+        throw new UnsupportedFeatureException("Topics",
+                "Use a Queue.");
     }
 
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Durable topic subscribers",
+                "Use a Queue.");
     }
 
     @Override
     public TopicSubscriber createDurableSubscriber(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Durable topic subscribers",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Durable topic consumers",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Durable topic consumers",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Shared topic subscriptions",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Shared topic subscriptions",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Shared durable topic subscriptions",
+                "Use a Queue.");
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("Topics are not supported.");
+        throw new UnsupportedFeatureException("Shared durable topic subscriptions",
+                "Use a Queue.");
     }
 
     @Override
     public QueueBrowser createBrowser(Queue queue) throws JMSException {
-        throw new UnsupportedOperationException("QueueBrowser is not supported.");
+        throw new UnsupportedFeatureException("QueueBrowser",
+                "Read the queue depth from the broker instead.");
     }
 
     @Override
     public QueueBrowser createBrowser(Queue queue, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("QueueBrowser is not supported.");
+        throw new UnsupportedFeatureException("QueueBrowser",
+                "Read the queue depth from the broker instead.");
     }
 
     @Override
     public TemporaryQueue createTemporaryQueue() throws JMSException {
-        throw new UnsupportedOperationException("Temporary queues are not supported.");
+        throw new UnsupportedFeatureException("Temporary queues",
+                "Create a queue with a name of your own.");
     }
 
     @Override
     public TemporaryTopic createTemporaryTopic() throws JMSException {
-        throw new UnsupportedOperationException("Temporary topics are not supported.");
+        throw new UnsupportedFeatureException("Temporary topics",
+                "Create a queue with a name of your own.");
     }
 
     @Override
     public void unsubscribe(String name) throws JMSException {
-        throw new UnsupportedOperationException("Unsubscribe is not supported.");
+        throw new UnsupportedFeatureException("Unsubscribing a durable subscription",
+                "Durable subscriptions are not supported either.");
     }
 
     /**

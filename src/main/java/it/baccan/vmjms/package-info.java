@@ -39,5 +39,6 @@
  * blocked {@code receive()} is unblocked.</p>
  *
  * @see it.baccan.vmjms.broker.InMemoryBrokerRegistry
+ * @see it.baccan.vmjms.exception.VmjmsErrorCodes
  */
 package it.baccan.vmjms;

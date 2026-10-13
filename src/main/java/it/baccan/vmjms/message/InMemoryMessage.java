@@ -23,9 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>Properties are not made read-only on receive, so a consumer can write to a
  *       message it has just received instead of getting
  *       {@code MessageNotWriteableException}.</li>
- *   <li>{@link #getBody(Class)} throws {@code UnsupportedOperationException} and
- *       {@link #isBodyAssignableTo(Class)} answers false on this base class: the
- *       subclasses are the ones that implement them.</li>
+ *   <li>Properties are not read-only on receive, so a consumer can write to a message it
+ *       has just received instead of getting
+ *       {@code jakarta.jms.MessageNotWriteableException}.</li>
  *   <li>{@code JMSDeliveryTime} and {@code JMSRedelivered} are stored and reported, and
  *       nothing in the provider sets them: there is neither a delivery delay nor a
  *       redelivery.</li>
@@ -311,13 +311,34 @@ public class InMemoryMessage implements Message {
         // Overridden by subclasses if needed
     }
 
+    /**
+     * Always null on this class, which has no body.
+     *
+     * <p>As the specification puts it, for a message that is a {@code Message} and not
+     * one of its subtypes "the returned value will always be null", whatever type is
+     * asked for. The subclasses that do carry a body override this.</p>
+     *
+     * @param <T> the type asked for, which is ignored here
+     * @param c   the type asked for, which is ignored here
+     * @return null
+     */
     @Override
     public <T> T getBody(Class<T> c) throws JMSException {
-        throw new UnsupportedOperationException("getBody(Class) not supported in base message");
+        return null;
     }
 
+    /**
+     * Always true on this class, which has no body.
+     *
+     * <p>The specification requires true "irrespective of the value" of the type for a
+     * message with no body, so that a caller can ask for any type and then read null.
+     * The subclasses that do carry a body override this.</p>
+     *
+     * @param c the type asked for, which is ignored here
+     * @return true
+     */
     @Override
     public boolean isBodyAssignableTo(Class c) throws JMSException {
-        return false;
+        return true;
     }
 }

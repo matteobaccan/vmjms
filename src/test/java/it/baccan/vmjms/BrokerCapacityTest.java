@@ -2,6 +2,8 @@ package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
 import it.baccan.vmjms.broker.InMemoryBrokerRegistry;
+import it.baccan.vmjms.exception.CapacityExceededException;
+import it.baccan.vmjms.exception.VmjmsErrorCodes;
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSRuntimeException;

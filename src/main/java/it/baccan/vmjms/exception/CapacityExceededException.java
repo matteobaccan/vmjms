@@ -1,4 +1,4 @@
-package it.baccan.vmjms;
+package it.baccan.vmjms.exception;
 
 import jakarta.jms.ResourceAllocationException;
 

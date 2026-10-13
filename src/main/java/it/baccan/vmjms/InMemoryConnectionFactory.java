@@ -2,10 +2,12 @@ package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
 import it.baccan.vmjms.broker.InMemoryBrokerRegistry;
+import it.baccan.vmjms.exception.VmjmsErrorCodes;
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -28,8 +30,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h2>Deviations from the JMS specification</h2>
  *
  * <p>The simplified API introduced in JMS 2.0 is not implemented: every
- * {@code createContext} form throws {@code UnsupportedOperationException}. Use
- * {@link #createConnection()} and work with sessions.</p>
+ * {@code createContext} form throws {@code jakarta.jms.JMSRuntimeException} carrying
+ * {@link VmjmsErrorCodes#UNSUPPORTED_FEATURE}, since those methods declare no checked
+ * exception. Use {@link #createConnection()} and work with sessions.</p>
  */
 public class InMemoryConnectionFactory implements ConnectionFactory {
     private static final AtomicLong anonymousBrokerCounter = new AtomicLong(0);
@@ -91,22 +94,34 @@ public class InMemoryConnectionFactory implements ConnectionFactory {
 
     @Override
     public JMSContext createContext() {
-        throw new UnsupportedOperationException("JMSContext (JMS 2.0 Simplified API) is not supported. Use createConnection() instead.");
+        throw new JMSRuntimeException(
+                "Not implemented by this in-memory provider: JMSContext, the simplified API"
+                        + " introduced in JMS 2.0. Use createConnection() instead.",
+                VmjmsErrorCodes.UNSUPPORTED_FEATURE);
     }
 
     @Override
     public JMSContext createContext(int sessionMode) {
-        throw new UnsupportedOperationException("JMSContext (JMS 2.0 Simplified API) is not supported. Use createConnection() instead.");
+        throw new JMSRuntimeException(
+                "Not implemented by this in-memory provider: JMSContext, the simplified API"
+                        + " introduced in JMS 2.0. Use createConnection() instead.",
+                VmjmsErrorCodes.UNSUPPORTED_FEATURE);
     }
 
     @Override
     public JMSContext createContext(String userName, String password) {
-        throw new UnsupportedOperationException("JMSContext (JMS 2.0 Simplified API) is not supported. Use createConnection() instead.");
+        throw new JMSRuntimeException(
+                "Not implemented by this in-memory provider: JMSContext, the simplified API"
+                        + " introduced in JMS 2.0. Use createConnection() instead.",
+                VmjmsErrorCodes.UNSUPPORTED_FEATURE);
     }
 
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
-        throw new UnsupportedOperationException("JMSContext (JMS 2.0 Simplified API) is not supported. Use createConnection() instead.");
+        throw new JMSRuntimeException(
+                "Not implemented by this in-memory provider: JMSContext, the simplified API"
+                        + " introduced in JMS 2.0. Use createConnection() instead.",
+                VmjmsErrorCodes.UNSUPPORTED_FEATURE);
     }
 
     /**

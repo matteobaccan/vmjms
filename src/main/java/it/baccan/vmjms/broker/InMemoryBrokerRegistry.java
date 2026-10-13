@@ -1,6 +1,6 @@
 package it.baccan.vmjms.broker;
 
-import it.baccan.vmjms.VmjmsErrorCodes;
+import it.baccan.vmjms.exception.VmjmsErrorCodes;
 import jakarta.jms.JMSRuntimeException;
 import java.util.ArrayList;
 import java.util.Set;

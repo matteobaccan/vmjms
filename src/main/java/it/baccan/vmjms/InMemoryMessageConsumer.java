@@ -1,6 +1,7 @@
 package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
+import it.baccan.vmjms.exception.UnsupportedFeatureException;
 import jakarta.jms.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -22,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * <ul>
  *   <li>Synchronous consumption only: {@code setMessageListener} and
- *       {@code getMessageListener} throw {@code UnsupportedOperationException}.</li>
+ *       {@code getMessageListener} throw {@link UnsupportedFeatureException}.</li>
  *   <li>Message selectors are accepted by the session and ignored, so this consumer
  *       receives every message on its queue and {@link #getMessageSelector()} answers
  *       null.</li>
@@ -68,12 +69,14 @@ public class InMemoryMessageConsumer implements MessageConsumer {
 
     @Override
     public MessageListener getMessageListener() throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous MessageListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous delivery through a MessageListener",
+                "Use receive(), receive(timeout) or receiveNoWait().");
     }
 
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
-        throw new UnsupportedOperationException("Asynchronous MessageListener is not supported");
+        throw new UnsupportedFeatureException("Asynchronous delivery through a MessageListener",
+                "Use receive(), receive(timeout) or receiveNoWait().");
     }
 
     @Override

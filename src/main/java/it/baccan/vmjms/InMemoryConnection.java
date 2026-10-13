@@ -1,6 +1,7 @@
 package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
+import it.baccan.vmjms.exception.UnsupportedFeatureException;
 import jakarta.jms.*;
 import java.util.*;
 
@@ -26,9 +27,9 @@ import java.util.*;
  *       whether or not {@code start()} was called.</li>
  *   <li>An {@code ExceptionListener} can be set and read back but is never called, since
  *       there is no connection to lose and no asynchronous delivery to fail.</li>
- *   <li>The {@code createConnectionConsumer} and {@code createSharedConnectionConsumer}
- *       forms throw {@code UnsupportedOperationException}: application servers are not a
- *       target of this provider.</li>
+ *   <li>The {@code createConnectionConsumer} forms throw
+ *       {@link UnsupportedFeatureException}: application servers are not a target of this
+ *       provider.</li>
  * </ul>
  */
 public class InMemoryConnection implements Connection {
@@ -134,22 +135,26 @@ public class InMemoryConnection implements Connection {
 
     @Override
     public ConnectionConsumer createConnectionConsumer(Destination destination, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException("ConnectionConsumer is not supported");
+        throw new UnsupportedFeatureException("ConnectionConsumer",
+                "Hosting this provider in an application server is out of scope.");
     }
 
     @Override
     public ConnectionConsumer createDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException("ConnectionConsumer is not supported");
+        throw new UnsupportedFeatureException("ConnectionConsumer",
+                "Hosting this provider in an application server is out of scope.");
     }
 
     @Override
     public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException("ConnectionConsumer is not supported");
+        throw new UnsupportedFeatureException("ConnectionConsumer",
+                "Hosting this provider in an application server is out of scope.");
     }
 
     @Override
     public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException("ConnectionConsumer is not supported");
+        throw new UnsupportedFeatureException("ConnectionConsumer",
+                "Hosting this provider in an application server is out of scope.");
     }
 
     @Override
