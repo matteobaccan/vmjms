@@ -1,153 +1,22 @@
 package it.baccan.vmjms;
 
+import it.baccan.vmjms.broker.InMemoryBrokerRegistry;
 import jakarta.jms.*;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class InMemoryJMSTest {
 
-    private static void assertEquals(Object expected, Object actual) {
-        assertEquals(expected, actual, null);
-    }
-
-    private static void assertEquals(Object expected, Object actual, String msg) {
-        if (expected == null && actual == null) return;
-        if (expected != null && expected.equals(actual)) return;
-        throw new AssertionError((msg != null ? msg + " - " : "") + "Expected: <" + expected + ">, but was: <" + actual + ">");
-    }
-
-    private static void assertNull(Object obj) {
-        assertNull(obj, null);
-    }
-
-    private static void assertNull(Object obj, String msg) {
-        if (obj != null) {
-            throw new AssertionError((msg != null ? msg + " - " : "") + "Expected null, but was: <" + obj + ">");
-        }
-    }
-
-    private static void assertNotNull(Object obj) {
-        assertNotNull(obj, null);
-    }
-
-    private static void assertNotNull(Object obj, String msg) {
-        if (obj == null) {
-            throw new AssertionError((msg != null ? msg + " - " : "") + "Expected not null");
-        }
-    }
-
-    private static void assertTrue(boolean val) {
-        assertTrue(val, null);
-    }
-
-    private static void assertTrue(boolean val, String msg) {
-        if (!val) {
-            throw new AssertionError((msg != null ? msg + " - " : "") + "Expected true, but was false");
-        }
-    }
-
-    public static void main(String[] args) {
-        InMemoryJMSTest test = new InMemoryJMSTest();
-        int passed = 0;
-        int failed = 0;
-        
-        System.out.println("Running InMemoryJMSTest...");
-        
-        try {
-            System.out.print("testIsolatedFactories: ");
-            test.testIsolatedFactories();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testFIFOOrderOfDelivery: ");
-            test.testFIFOOrderOfDelivery();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testHexTimestampSequenceIDGeneration: ");
-            test.testHexTimestampSequenceIDGeneration();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testTextMessageAndBytesMessageSupport: ");
-            test.testTextMessageAndBytesMessageSupport();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testReceiveTimeout: ");
-            test.testReceiveTimeout();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testCascadingCloseAndThreadInterruption: ");
-            test.testCascadingCloseAndThreadInterruption();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        try {
-            System.out.print("testSharedFactoriesWithMatchingBrokerId: ");
-            test.testSharedFactoriesWithMatchingBrokerId();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-
-        try {
-            System.out.print("testQueueNameParameterParsing: ");
-            test.testQueueNameParameterParsing();
-            System.out.println("PASSED");
-            passed++;
-        } catch (Throwable e) {
-            System.out.println("FAILED");
-            e.printStackTrace();
-            failed++;
-        }
-        
-        System.out.println("\nResults: " + passed + " passed, " + failed + " failed.");
-        if (failed > 0) {
-            System.exit(1);
-        } else {
-            System.exit(0);
-        }
+    /**
+     * Whichever class runs last, the suite leaves no broker, no sweeper thread and no
+     * MBean behind.
+     */
+    @AfterAll
+    public static void releaseBrokers() {
+        InMemoryBrokerRegistry.clear();
     }
 
     @Test
