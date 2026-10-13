@@ -2,7 +2,6 @@ package it.baccan.vmjms;
 
 import it.baccan.vmjms.broker.InMemoryBroker;
 import jakarta.jms.*;
-import java.util.concurrent.BlockingQueue;
 
 /**
  * Implementation of jakarta.jms.MessageProducer interface.
@@ -160,9 +159,9 @@ public class InMemoryMessageProducer implements MessageProducer {
             ((BytesMessage) message).reset();
         }
 
-        // Offer to broker queue
-        BlockingQueue<Message> brokerQueue = broker.getOrCreateQueue(queue.getQueueName());
-        brokerQueue.offer(message);
+        // Hand the message to the broker, which accounts for the capacity it occupies and
+        // rejects the send with a CapacityExceededException if the broker is full.
+        broker.send(queue.getQueueName(), message);
     }
 
     @Override
