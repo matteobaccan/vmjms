@@ -11,7 +11,39 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**
- * Implementation of jakarta.jms.Session interface.
+ * A session on an in-memory connection: it creates queues, messages, producers and
+ * consumers, and owns them until it closes.
+ *
+ * <p>Obtained from {@link InMemoryConnection#createSession(boolean, int)}. As in the JMS
+ * threading model, a session and everything created from it are meant to be used by one
+ * thread at a time; {@link #close()} is the exception and may be called from another
+ * thread to unblock a consumer. Closing cascades to the producers and the consumers of
+ * the session and is idempotent.</p>
+ *
+ * <p>{@link #createQueue(String)} accepts query parameters after a {@code ?}, which
+ * {@link InMemoryQueue} parses and carries for the application to read.</p>
+ *
+ * <h2>Deviations from the JMS specification</h2>
+ *
+ * <ul>
+ *   <li>No transactions: {@code commit()} and {@code rollback()} throw
+ *       {@code UnsupportedOperationException}, even on a session created with
+ *       {@code transacted} set to true, which is reported back faithfully by
+ *       {@link #getTransacted()}.</li>
+ *   <li>Delivery always behaves as {@code AUTO_ACKNOWLEDGE}. The acknowledge mode is
+ *       recorded and reported, {@link #recover()} does nothing, and
+ *       {@code Message.acknowledge()} does nothing.</li>
+ *   <li>Queues only: every {@code Topic} form, durable and shared subscriptions and
+ *       {@code unsubscribe} throw {@code UnsupportedOperationException}.</li>
+ *   <li>Two body types only: {@code createTextMessage} and {@code createBytesMessage}
+ *       work, while {@code MapMessage}, {@code ObjectMessage} and {@code StreamMessage}
+ *       throw {@code UnsupportedOperationException}.</li>
+ *   <li>No asynchronous delivery: the {@code MessageListener} accessors and the
+ *       {@code QueueBrowser}, temporary-destination and {@code run()} forms are either
+ *       unsupported or do nothing.</li>
+ *   <li>Message selectors are accepted and ignored, so a consumer created with one
+ *       receives every message on its queue.</li>
+ * </ul>
  */
 public class InMemorySession implements Session {
     private final InMemoryBroker broker;
@@ -22,6 +54,18 @@ public class InMemorySession implements Session {
     private final List<InMemoryMessageConsumer> consumers = Collections.synchronizedList(new ArrayList<>());
     private volatile boolean closed = false;
 
+    /**
+     * Creates a session on a connection. Applications obtain one from
+     * {@link InMemoryConnection#createSession(boolean, int)} instead of calling this.
+     *
+     * @param broker          the broker whose queues this session works on
+     * @param connection      the connection this session belongs to
+     * @param transacted      recorded and reported by {@link #getTransacted()}; this
+     *                        provider implements no transactions, so a transacted session
+     *                        can be created but neither committed nor rolled back
+     * @param acknowledgeMode recorded and reported by {@link #getAcknowledgeMode()};
+     *                        delivery always behaves as {@code AUTO_ACKNOWLEDGE}
+     */
     public InMemorySession(InMemoryBroker broker, InMemoryConnection connection, boolean transacted, int acknowledgeMode) {
         this.broker = broker;
         this.connection = connection;
@@ -266,14 +310,31 @@ public class InMemorySession implements Session {
         throw new UnsupportedOperationException("Unsubscribe is not supported.");
     }
 
+    /**
+     * Whether this session has been closed.
+     *
+     * @return true once {@link #close()} has run
+     */
     public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Forgets a producer that has closed itself, so that closing the session does not
+     * close it twice. Called by {@link InMemoryMessageProducer#close()}.
+     *
+     * @param producer the producer to stop tracking
+     */
     public void removeProducer(InMemoryMessageProducer producer) {
         producers.remove(producer);
     }
 
+    /**
+     * Forgets a consumer that has closed itself, so that closing the session does not
+     * close it twice. Called by {@link InMemoryMessageConsumer#close()}.
+     *
+     * @param consumer the consumer to stop tracking
+     */
     public void removeConsumer(InMemoryMessageConsumer consumer) {
         consumers.remove(consumer);
     }

@@ -5,15 +5,31 @@ import jakarta.jms.MessageFormatException;
 import jakarta.jms.TextMessage;
 
 /**
- * Implementation of jakarta.jms.TextMessage interface.
+ * A message whose body is a string.
+ *
+ * <p>Created through {@code Session.createTextMessage()} or
+ * {@code Session.createTextMessage(String)}. The body may be null.
+ * {@link #getBody(Class)} serves any type a {@code String} can be assigned to, so
+ * {@code String}, {@code CharSequence} and {@code Object} all work, and refuses anything
+ * else with {@code jakarta.jms.MessageFormatException}.</p>
  */
 public class InMemoryTextMessage extends InMemoryMessage implements TextMessage {
     private String text;
 
+    /**
+     * Creates a text message with no body. Applications use
+     * {@code Session.createTextMessage()} instead.
+     */
     public InMemoryTextMessage() {
         super();
     }
 
+    /**
+     * Creates a text message with a body. Applications use
+     * {@code Session.createTextMessage(String)} instead.
+     *
+     * @param text the body, which may be null
+     */
     public InMemoryTextMessage(String text) {
         super();
         this.text = text;

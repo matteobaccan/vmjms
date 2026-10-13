@@ -356,6 +356,11 @@ public class InMemoryBroker {
         }
     }
 
+    /**
+     * Whether this broker has been destroyed and refuses every send and receive.
+     *
+     * @return true once the broker has been destroyed
+     */
     public boolean isTerminated() {
         return terminated;
     }
@@ -413,6 +418,12 @@ public class InMemoryBroker {
         }
     }
 
+    /**
+     * Whether this broker is currently registered with the platform MBean server.
+     *
+     * @return true between a successful {@link #enableJmx()} and the matching
+     *         {@link #disableJmx()} or the destruction of the broker
+     */
     public boolean isJmxEnabled() {
         return jmxEnabled;
     }
@@ -476,10 +487,21 @@ public class InMemoryBroker {
         return "ID:" + brokerId + ":" + instanceId + ":" + messageIdSequence.incrementAndGet();
     }
 
+    /**
+     * Identifier of this broker, as the factory supplied it and never quoted.
+     *
+     * @return the Broker ID
+     */
     public String getBrokerId() {
         return brokerId;
     }
 
+    /**
+     * Ordinal of this broker among those created in this JVM, used to keep message IDs
+     * unique when a Broker ID is destroyed and created again.
+     *
+     * @return the instance number, counting from 1
+     */
     public long getInstanceId() {
         return instanceId;
     }
@@ -499,6 +521,12 @@ public class InMemoryBroker {
         return maxMessages - capacity.availablePermits();
     }
 
+    /**
+     * Number of queues this broker holds. A queue is created by the first send or receive
+     * naming it and is never removed while the broker lives.
+     *
+     * @return the number of queues
+     */
     public int getQueueCount() {
         return queues.size();
     }
@@ -512,30 +540,71 @@ public class InMemoryBroker {
         return Collections.unmodifiableMap(depths);
     }
 
+    /**
+     * Messages accepted into a queue since this broker was created. A message rejected for
+     * lack of capacity is not counted here.
+     *
+     * @return the number of messages enqueued over the lifetime of the broker
+     */
     public long getEnqueuedCount() {
         return enqueuedCount.get();
     }
 
+    /**
+     * Messages handed to a consumer since this broker was created.
+     *
+     * @return the number of messages delivered over the lifetime of the broker
+     */
     public long getDeliveredCount() {
         return deliveredCount.get();
     }
 
+    /**
+     * Messages discarded because their expiration had passed, whether the reclamation
+     * found them or a consumer skipped them.
+     *
+     * @return the number of messages expired over the lifetime of the broker
+     */
     public long getExpiredCount() {
         return expiredCount.get();
     }
 
+    /**
+     * Messages discarded by a purge or by the destruction of the broker, counted apart
+     * from the expired ones so that the two reasons stay distinguishable.
+     *
+     * @return the number of messages purged over the lifetime of the broker
+     */
     public long getPurgedCount() {
         return purgedCount.get();
     }
 
+    /**
+     * Sends refused because the broker was already holding its maximum. A rejected message
+     * never entered a queue and occupies no capacity.
+     *
+     * @return the number of sends rejected over the lifetime of the broker
+     */
     public long getRejectedCount() {
         return rejectedCount.get();
     }
 
+    /**
+     * Reclamation passes that ended in a failure on this broker. A non-zero value means
+     * expired messages may still be holding capacity; later passes keep running.
+     *
+     * @return the number of failed sweeps over the lifetime of the broker
+     */
     public long getSweepFailureCount() {
         return sweepFailureCount.get();
     }
 
+    /**
+     * Type and message of the last failure met while reclaiming expired messages.
+     *
+     * @return the description of the last failure, or an empty string if no sweep has
+     *         failed on this broker
+     */
     public String getLastSweepError() {
         return lastSweepError;
     }

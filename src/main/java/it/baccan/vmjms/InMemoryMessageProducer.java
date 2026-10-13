@@ -4,7 +4,36 @@ import it.baccan.vmjms.broker.InMemoryBroker;
 import jakarta.jms.*;
 
 /**
- * Implementation of jakarta.jms.MessageProducer interface.
+ * A producer that hands messages to a broker queue.
+ *
+ * <p>Obtained from {@link InMemorySession#createProducer(jakarta.jms.Destination)}. Every
+ * {@code send} form ends in the broker, which accounts for the capacity the message
+ * occupies and refuses the send with a {@link CapacityExceededException} when the broker
+ * is already holding its maximum. A refused send throws immediately instead of blocking,
+ * and the message is not queued.</p>
+ *
+ * <p>Before handing a message over, the producer stamps the headers the specification
+ * makes its responsibility: the message ID, unless disabled through
+ * {@link #setDisableMessageID(boolean)}, the timestamp, unless disabled through
+ * {@link #setDisableMessageTimestamp(boolean)}, the destination, the delivery mode, the
+ * priority, and the absolute expiration computed from the time to live. A time to live of
+ * zero, which is the default, means the message never expires. A {@code BytesMessage} is
+ * reset to read-only so the consumer can read it straight away.</p>
+ *
+ * <h2>Deviations from the JMS specification</h2>
+ *
+ * <ul>
+ *   <li>Only {@code Queue} destinations are accepted; anything else, including null,
+ *       fails with {@code jakarta.jms.InvalidDestinationException}.</li>
+ *   <li>{@code JMSPriority} is stamped on the message and reported back, but delivery is
+ *       FIFO per queue: a higher priority does not overtake.</li>
+ *   <li>The delivery delay is recorded and reported, and ignored: a message is available
+ *       to a consumer as soon as it is sent.</li>
+ *   <li>Nothing is persisted, so {@code PERSISTENT} and {@code NON_PERSISTENT} behave
+ *       alike and a JVM restart starts empty.</li>
+ *   <li>The asynchronous {@code send} forms taking a {@code CompletionListener} throw
+ *       {@code UnsupportedOperationException}.</li>
+ * </ul>
  */
 public class InMemoryMessageProducer implements MessageProducer {
     private final InMemoryBroker broker;
@@ -17,6 +46,16 @@ public class InMemoryMessageProducer implements MessageProducer {
     private long deliveryDelay = 0;
     private volatile boolean closed = false;
 
+    /**
+     * Creates a producer. Applications obtain one from
+     * {@link InMemorySession#createProducer(jakarta.jms.Destination)} instead of calling
+     * this.
+     *
+     * @param broker             the broker the messages are sent to
+     * @param defaultDestination the queue used by the {@code send} forms that take no
+     *                           destination; may be null, in which case every send must
+     *                           name its own
+     */
     public InMemoryMessageProducer(InMemoryBroker broker, Queue defaultDestination) {
         this.broker = broker;
         this.defaultDestination = defaultDestination;

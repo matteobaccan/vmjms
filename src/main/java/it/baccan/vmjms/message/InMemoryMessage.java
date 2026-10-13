@@ -5,7 +5,31 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Base implementation of jakarta.jms.Message interface with properties and headers.
+ * The headers and the properties shared by every message of this provider.
+ *
+ * <p>Carries the JMS headers and the application properties, and serves as the base of
+ * {@link InMemoryTextMessage} and {@link InMemoryBytesMessage}, which add the body.
+ * Applications create messages through the {@code Session} rather than directly.</p>
+ *
+ * <p>Properties are held in a concurrent map, so reading them while another thread writes
+ * them is safe, but a message is a mutable object with no copy taken on send: once sent,
+ * leave it to the broker.</p>
+ *
+ * <h2>Deviations from the JMS specification</h2>
+ *
+ * <ul>
+ *   <li>{@link #acknowledge()} does nothing: delivery always behaves as
+ *       {@code AUTO_ACKNOWLEDGE}.</li>
+ *   <li>Properties are not made read-only on receive, so a consumer can write to a
+ *       message it has just received instead of getting
+ *       {@code MessageNotWriteableException}.</li>
+ *   <li>{@link #getBody(Class)} throws {@code UnsupportedOperationException} and
+ *       {@link #isBodyAssignableTo(Class)} answers false on this base class: the
+ *       subclasses are the ones that implement them.</li>
+ *   <li>{@code JMSDeliveryTime} and {@code JMSRedelivered} are stored and reported, and
+ *       nothing in the provider sets them: there is neither a delivery delay nor a
+ *       redelivery.</li>
+ * </ul>
  */
 public class InMemoryMessage implements Message {
     private String jmsMessageID;

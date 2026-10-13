@@ -9,7 +9,13 @@ import jakarta.jms.JMSException;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Implementation of jakarta.jms.ConnectionFactory containing a private or shared InMemoryBroker.
+ * The entry point of the provider: a {@code ConnectionFactory} onto an in-memory broker.
+ *
+ * <p>A factory with no Broker ID owns a private broker, which makes one test independent
+ * of the next. Two factories built with the same Broker ID share one broker, and so share
+ * its queues, its capacity and its counters; the broker outlives the connections and the
+ * factories, until it is destroyed through
+ * {@link it.baccan.vmjms.broker.InMemoryBrokerRegistry#destroy(String)}.</p>
  *
  * <p>A factory may cap the number of messages its broker holds. The cap is broker-wide, is
  * fixed when the broker is created, and defaults to the system property
@@ -18,6 +24,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * different one fails immediately with a {@code jakarta.jms.JMSRuntimeException} carrying
  * {@link VmjmsErrorCodes#CONFLICTING_BROKER_LIMIT}, because one of the two limits would
  * otherwise be silently ignored.</p>
+ *
+ * <h2>Deviations from the JMS specification</h2>
+ *
+ * <p>The simplified API introduced in JMS 2.0 is not implemented: every
+ * {@code createContext} form throws {@code UnsupportedOperationException}. Use
+ * {@link #createConnection()} and work with sessions.</p>
  */
 public class InMemoryConnectionFactory implements ConnectionFactory {
     private static final AtomicLong anonymousBrokerCounter = new AtomicLong(0);
@@ -97,6 +109,14 @@ public class InMemoryConnectionFactory implements ConnectionFactory {
         throw new UnsupportedOperationException("JMSContext (JMS 2.0 Simplified API) is not supported. Use createConnection() instead.");
     }
 
+    /**
+     * The broker this factory hands to the connections it creates.
+     *
+     * <p>Outside the JMS API: useful to read the counters of the broker, to enable its JMX
+     * monitoring or to purge it in a test.</p>
+     *
+     * @return the broker of this factory, never null
+     */
     public InMemoryBroker getBroker() {
         return broker;
     }

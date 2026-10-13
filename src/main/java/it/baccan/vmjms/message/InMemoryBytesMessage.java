@@ -4,7 +4,16 @@ import jakarta.jms.*;
 import java.io.*;
 
 /**
- * Implementation of jakarta.jms.BytesMessage interface.
+ * A message whose body is a byte array, written and then read through data streams.
+ *
+ * <p>Created through {@code Session.createBytesMessage()}. The body starts out writable:
+ * the {@code writeXxx} methods append to it, {@link #reset()} switches it to read-only
+ * and rewinds it, and the {@code readXxx} methods then consume it in order. Writing to a
+ * message that has been reset fails with {@code MessageNotWriteableException}, and
+ * reading one that has not fails with {@code MessageNotReadableException}; a producer
+ * resets the message on send, so a consumer can read it straight away.</p>
+ *
+ * <p>The streams hold position, so a message is readable by one thread at a time.</p>
  */
 public class InMemoryBytesMessage extends InMemoryMessage implements BytesMessage {
     private byte[] bodyBytes = new byte[0];
@@ -14,6 +23,10 @@ public class InMemoryBytesMessage extends InMemoryMessage implements BytesMessag
     private transient DataOutputStream dos;
     private transient DataInputStream dis;
 
+    /**
+     * Creates an empty, writable bytes message. Applications use
+     * {@code Session.createBytesMessage()} instead.
+     */
     public InMemoryBytesMessage() {
         super();
         clearBody();

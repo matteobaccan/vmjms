@@ -5,7 +5,31 @@ import jakarta.jms.*;
 import java.util.*;
 
 /**
- * Implementation of jakarta.jms.Connection managing sessions and cascading closes.
+ * A connection to an in-memory broker, owning the sessions created from it.
+ *
+ * <p>Obtained from {@link InMemoryConnectionFactory#createConnection()}. Closing it
+ * cascades: every session it owns is closed, with their producers and consumers, and a
+ * thread blocked in {@code receive()} is unblocked with a
+ * {@code jakarta.jms.IllegalStateException} rather than left waiting. Closing is
+ * idempotent and a failure while closing one session does not stop the others.</p>
+ *
+ * <p>Closing a connection does not touch the broker: the messages already sent stay
+ * queued and a consumer created later from another connection on the same Broker ID
+ * still receives them. Destroying a broker is explicit, through
+ * {@link it.baccan.vmjms.broker.InMemoryBrokerRegistry#destroy(String)}.</p>
+ *
+ * <h2>Deviations from the JMS specification</h2>
+ *
+ * <ul>
+ *   <li>{@link #start()} and {@link #stop()} are accepted and do nothing: delivery is
+ *       never gated on the state of the connection, so a consumer receives messages
+ *       whether or not {@code start()} was called.</li>
+ *   <li>An {@code ExceptionListener} can be set and read back but is never called, since
+ *       there is no connection to lose and no asynchronous delivery to fail.</li>
+ *   <li>The {@code createConnectionConsumer} and {@code createSharedConnectionConsumer}
+ *       forms throw {@code UnsupportedOperationException}: application servers are not a
+ *       target of this provider.</li>
+ * </ul>
  */
 public class InMemoryConnection implements Connection {
     private final InMemoryBroker broker;
@@ -14,6 +38,12 @@ public class InMemoryConnection implements Connection {
     private ExceptionListener exceptionListener;
     private volatile boolean closed = false;
 
+    /**
+     * Creates a connection onto a broker. Applications obtain one from
+     * {@link InMemoryConnectionFactory#createConnection()} instead of calling this.
+     *
+     * @param broker the broker whose queues this connection works on
+     */
     public InMemoryConnection(InMemoryBroker broker) {
         this.broker = broker;
     }
@@ -147,10 +177,21 @@ public class InMemoryConnection implements Connection {
         }
     }
 
+    /**
+     * Whether this connection has been closed.
+     *
+     * @return true once {@link #close()} has run
+     */
     public boolean isClosed() {
         return closed;
     }
 
+    /**
+     * Forgets a session that has closed itself, so that closing the connection does not
+     * close it twice. Called by {@link InMemorySession#close()}.
+     *
+     * @param session the session to stop tracking
+     */
     public void removeSession(InMemorySession session) {
         sessions.remove(session);
     }
