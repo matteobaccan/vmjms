@@ -127,6 +127,45 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <!--
+                    Every Java source starts with the header in etc/header.txt, which is
+                    the single place its text lives. The check is bound to verify, so the
+                    same mvn verify that runs the tests enforces the header, locally and
+                    in CI on every JDK of the matrix, before a pull request is opened.
+                    `mvn license:format` writes it into the files that lack it, so obeying
+                    the rule costs one command. strictCheck is on because a header that
+                    has drifted from the template - another URL, another holder - has to
+                    fail like a missing one.
+                -->
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>5.1.2</version>
+                <configuration>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>etc/header.txt</header>
+                            <includes>
+                                <include>src/main/java/**/*.java</include>
+                                <include>src/test/java/**/*.java</include>
+                            </includes>
+                        </licenseSet>
+                    </licenseSets>
+                    <strictCheck>true</strictCheck>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                    </mapping>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check-source-headers</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
