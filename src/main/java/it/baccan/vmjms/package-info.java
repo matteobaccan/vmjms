@@ -1,3 +1,10 @@
+/*
+ * vmjms - in-memory Jakarta JMS provider
+ * https://github.com/matteobaccan/vmjms
+ *
+ * Copyright (c) 2026 Matteo Baccan
+ * SPDX-License-Identifier: MIT
+ */
 /**
  * In-memory Jakarta JMS 3.1 provider: the entry point and the point-to-point API.
  *
