@@ -81,9 +81,11 @@ exposes the fourth to `maven-gpg-plugin`.
    produces the main, sources and javadoc jars, signs each of them and the POM,
    uploads the bundle to the Central Portal, and attaches the three jars to the
    GitHub Release.
-4. The publishing plugin runs with `autoPublish` off, so the deployment stops in
-   *validated* state on the Portal. Open it, read the validation report, check
-   the coordinates, the version and the file list, then publish it by hand.
+4. The publishing plugin runs with `autoPublish` on and `waitUntil` set to
+   `published`, so the deployment is published without anyone pressing a button
+   and the workflow finishes only once the version is actually live. A job that
+   ends green therefore means a resolvable artifact; a validation the Portal
+   rejects fails the release instead of leaving it half done.
 5. Confirm the artifact is live:
 
    ```sh
@@ -98,8 +100,10 @@ exposes the fourth to `maven-gpg-plugin`.
 
 **A published version is immutable.** It cannot be deleted, replaced or fixed,
 only superseded. A mistake that reaches Central is corrected by releasing the
-next patch version, which is why the first run of a new pipeline is staged for
-inspection rather than published automatically.
+next patch version. Automatic publication is what 1.1.0 earned by going through
+the pipeline under inspection; the safety net is now the tag itself, so read
+what you are tagging, and use the local dry run below after any change to the
+`release` profile.
 
 ## Local dry run
 
@@ -190,6 +194,11 @@ piece. Everything it requires — `name`, `description`, `url`, `licenses`,
 produced by the `release` profile, so a rejection means something in the POM
 has regressed; fix it and release the next version.
 
-**The deployment never completes.** Until `autoPublish` is on, a deployment
-sits on the Portal waiting for a human. A workflow that finished green has
-uploaded and validated the bundle; it has not published it.
+**The release job hangs on the publish step.** With `waitUntil` set to
+`published` the plugin polls the Portal until the version is live, which takes
+minutes rather than seconds. A job still running there is normal; a job that
+ends green has published. If the wait ever times out, the deployment is visible
+on the Portal and the version may well be live anyway - check
+`repo1.maven.org` before concluding that the release failed, and never re-tag a
+version that is already there, because Central refuses a second upload of a
+published version.

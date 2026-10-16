@@ -38,13 +38,13 @@
 ## 7. First release, staged for inspection
 
 - [x] 7.1 Tag `v1.1.0` and let the release workflow run. **Done 2026-10-16: run 38907688104 green, bundle validated, deployment `9ff32fe4-81bd-47b2-8184-e850f6a0c582` waiting for manual publishing. The three jars are attached to the GitHub Release.**
-- [ ] 7.2 On the Portal, open the deployment, read the validation report, and check the coordinates, the version and the file list before publishing.
-- [ ] 7.3 Publish the deployment by hand and confirm `https://repo1.maven.org/maven2/it/baccan/vmjms/1.1.0/` serves the four files and their signatures.
-- [ ] 7.4 From a scratch project with an empty local repository and no credentials, resolve `it.baccan:vmjms:1.1.0` and run one send/receive, proving the credential-free consumption scenario.
+- [x] 7.2 On the Portal, open the deployment, read the validation report, and check the coordinates, the version and the file list before publishing. **Done by the maintainer.**
+- [x] 7.3 Publish the deployment by hand and confirm `https://repo1.maven.org/maven2/it/baccan/vmjms/1.1.0/` serves the four files and their signatures. **Live twelve minutes after publication: the four files and their four `.asc` all serve 200, and a keyring holding only the key fetched from the keyserver reports `Good signature`.**
+- [x] 7.4 From a scratch project with an empty local repository and no credentials, resolve `it.baccan:vmjms:1.1.0` and run one send/receive, proving the credential-free consumption scenario. **Done: empty local repository, `settings.xml` with no credentials, no repository declaration; Maven fetched the jar and the POM from Central and a send/receive printed the message back.**
 
 ## 8. Automatic publishing
 
-- [ ] 8.1 Set `autoPublish` to `true` and `waitUntil` to `published` on the plugin, as a commit of its own.
+- [x] 8.1 Set `autoPublish` to `true` and `waitUntil` to `published` on the plugin, as a commit of its own. **Done, now that 1.1.0 has proved the pipeline end to end.**
 - [ ] 8.2 Confirm on the next release that the workflow finishes only once the version is live, and fails when the publication does not complete.
 
 ## 9. Documentation
