@@ -80,30 +80,23 @@ return.
 
 ## Install
 
-Releases are published to GitHub Packages:
+Releases are published to Maven Central, so a dependency declaration is all you
+need: no repository to declare, no credentials to configure.
 
 ```xml
 <dependency>
     <groupId>it.baccan</groupId>
     <artifactId>vmjms</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
-```xml
-<repositories>
-    <repository>
-        <id>github</id>
-        <url>https://maven.pkg.github.com/matteobaccan/vmjms</url>
-    </repository>
-</repositories>
-```
+Every published file is signed, and the jars of every release are also attached
+to the [GitHub Release](https://github.com/matteobaccan/vmjms/releases) if you
+prefer to download them directly.
 
-GitHub Packages requires authentication even for public artifacts: add a
-`<server>` entry with id `github` to your `~/.m2/settings.xml`, using a personal
-access token with the `read:packages` scope. The jars of every release are also
-attached to the [GitHub Release](https://github.com/matteobaccan/vmjms/releases)
-if you prefer to download them directly.
+Version 1.0.0 was published to GitHub Packages and stays there as a historical
+artifact; 1.1.0 onwards is on Maven Central.
 
 ## Quick start
 
@@ -433,12 +426,18 @@ the test suite). Every push and pull request is built on JDK 17 and 21 by the
 
 Pushing a `v*` tag runs the [`release`](.github/workflows/release.yml)
 workflow, which sets the POM version from the tag, builds the main, sources and
-javadoc jars, publishes them to GitHub Packages and attaches them to the
-GitHub Release:
+javadoc jars, signs them, publishes them to Maven Central through the Central
+Portal and attaches them to the GitHub Release:
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
+git tag v1.1.0 && git push origin v1.1.0
 ```
+
+The publishing plugin runs with `autoPublish` off, so a tag uploads and
+validates the deployment and then waits for the maintainer to publish it from
+the Portal. The prerequisites that live outside the build — the verified
+namespace, the signing key, the repository secrets — the local dry run and the
+troubleshooting are in [docs/release.md](docs/release.md).
 
 ## License
 
