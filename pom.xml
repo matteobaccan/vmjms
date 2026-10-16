@@ -170,8 +170,9 @@
     </build>
 
     <profiles>
-        <!-- Activated for Maven Central publication: signs every artifact with GPG
-             and uploads the bundle to the Central Portal. -->
+        <!-- Activated for Maven Central publication: signs every artifact with GPG,
+             uploads the bundle to the Central Portal and waits until the version is
+             live, so a green release means a resolvable artifact. -->
         <profile>
             <id>release</id>
             <build>
@@ -198,7 +199,8 @@
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
-                            <autoPublish>false</autoPublish>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
                         </configuration>
                     </plugin>
                 </plugins>
