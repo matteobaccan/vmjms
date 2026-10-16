@@ -37,7 +37,7 @@
 
 ## 7. First release, staged for inspection
 
-- [ ] 7.1 Tag `v1.1.0` and let the release workflow run.
+- [x] 7.1 Tag `v1.1.0` and let the release workflow run. **Done 2026-10-16: run 38907688104 green, bundle validated, deployment `9ff32fe4-81bd-47b2-8184-e850f6a0c582` waiting for manual publishing. The three jars are attached to the GitHub Release.**
 - [ ] 7.2 On the Portal, open the deployment, read the validation report, and check the coordinates, the version and the file list before publishing.
 - [ ] 7.3 Publish the deployment by hand and confirm `https://repo1.maven.org/maven2/it/baccan/vmjms/1.1.0/` serves the four files and their signatures.
 - [ ] 7.4 From a scratch project with an empty local repository and no credentials, resolve `it.baccan:vmjms:1.1.0` and run one send/receive, proving the credential-free consumption scenario.
