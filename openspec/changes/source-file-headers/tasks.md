@@ -22,7 +22,7 @@
 
 - [x] 4.1 Run the whole suite and `mvn clean verify` on JDK 17 and JDK 21, as CI does. **Green on JDK 17 and on JDK 21, 63 tests, header check included.**
 - [x] 4.2 Unpack the published sources jar and confirm every file in it carries the header. **Verified: 21 of 21 Java files in the sources jar carry the header.**
-- [ ] 4.3 Confirm the continuous build fails a branch that adds a Java file without the header, which is the same check running where it matters.
+- [x] 4.3 Confirm the continuous build fails a branch that adds a Java file without the header, which is the same check running where it matters. **Verified on a throwaway branch: run 38913213570 failed on JDK 17 and JDK 21 alike, naming `HeaderCheckProbe.java`, with the same message a local `verify` gives. Branch deleted.**
 
 ## 5. Documentation
 
