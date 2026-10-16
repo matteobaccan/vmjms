@@ -422,6 +422,21 @@ The project has no dependencies beyond the Jakarta JMS API (plus JUnit 5 for
 the test suite). Every push and pull request is built on JDK 17 and 21 by the
 [`build`](.github/workflows/build.yml) workflow.
 
+### Source headers
+
+Every Java file, main and test alike, starts with the same four-line header -
+the product, the repository URL, the copyright and the SPDX licence identifier -
+whose text lives in [`etc/header.txt`](etc/header.txt). `verify` fails and names
+the file when one is missing or when its header differs from the template, so a
+new file is caught before the pull request rather than after. To write it into
+the files that lack it:
+
+```bash
+mvn license:format
+```
+
+Running it on a file that already carries the header leaves it untouched.
+
 ### Releasing
 
 Pushing a `v*` tag runs the [`release`](.github/workflows/release.yml)
