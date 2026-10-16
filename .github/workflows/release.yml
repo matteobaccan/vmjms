@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: write
-  packages: write
 
 jobs:
   release:
@@ -27,9 +26,11 @@ jobs:
           java-version: '17'
           distribution: temurin
           cache: maven
-          server-id: github
-          server-username: GITHUB_ACTOR
-          server-password: GITHUB_TOKEN
+          server-id: central
+          server-username: CENTRAL_TOKEN_USERNAME
+          server-password: CENTRAL_TOKEN_PASSWORD
+          gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
 
       - name: Resolve release version
         id: version
@@ -50,11 +51,12 @@ jobs:
       - name: Build, test and package
         run: mvn -B -ntp clean verify
 
-      - name: Publish to GitHub Packages
-        run: mvn -B -ntp deploy -DskipTests
+      - name: Publish to Maven Central
+        run: mvn -B -ntp -Prelease deploy -DskipTests
         env:
-          GITHUB_ACTOR: ${{ github.actor }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
 
       - name: Create GitHub Release with the jars
         uses: softprops/action-gh-release@v2
