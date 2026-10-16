@@ -419,7 +419,7 @@ mvn clean verify
 ```
 
 The project has no dependencies beyond the Jakarta JMS API (plus JUnit 5 for
-the test suite). Every push and pull request is built on JDK 17 and 21 by the
+the test suite). Every push and pull request is built on JDK 17, 21 and 25 by the
 [`build`](.github/workflows/build.yml) workflow.
 
 ### Source headers
