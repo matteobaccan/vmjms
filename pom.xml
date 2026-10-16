@@ -39,19 +39,6 @@
         <url>https://github.com/matteobaccan/vmjms/issues</url>
     </issueManagement>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/matteobaccan/vmjms</url>
-        </repository>
-        <snapshotRepository>
-            <id>github</id>
-            <name>GitHub Packages</name>
-            <url>https://maven.pkg.github.com/matteobaccan/vmjms</url>
-        </snapshotRepository>
-    </distributionManagement>
-
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -144,7 +131,8 @@
     </build>
 
     <profiles>
-        <!-- Activated for Maven Central publication: signs every artifact with GPG. -->
+        <!-- Activated for Maven Central publication: signs every artifact with GPG
+             and uploads the bundle to the Central Portal. -->
         <profile>
             <id>release</id>
             <build>
@@ -162,6 +150,17 @@
                                 </goals>
                             </execution>
                         </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
