@@ -1,3 +1,10 @@
+/*
+ * vmjms - in-memory Jakarta JMS provider
+ * https://github.com/matteobaccan/vmjms
+ *
+ * Copyright (c) 2026 Matteo Baccan
+ * SPDX-License-Identifier: MIT
+ */
 /**
  * The brokers that hold the queues, their lifecycle and their monitoring.
  *
