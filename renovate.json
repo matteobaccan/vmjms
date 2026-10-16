@@ -2,5 +2,13 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:recommended"
+  ],
+  "packageRules": [
+    {
+      "description": "The release builds on the JDK the compiler targets, so a newer JDK there would publish artifacts no job tests. Newer JDKs are proven by the build matrix instead.",
+      "matchFileNames": [".github/workflows/release.yml"],
+      "matchDepNames": ["java-jdk"],
+      "enabled": false
+    }
   ]
 }
