@@ -445,14 +445,14 @@ javadoc jars, signs them, publishes them to Maven Central through the Central
 Portal and attaches them to the GitHub Release:
 
 ```bash
-git tag v1.1.0 && git push origin v1.1.0
+git tag v1.2.0 && git push origin v1.2.0
 ```
 
-The publishing plugin runs with `autoPublish` off, so a tag uploads and
-validates the deployment and then waits for the maintainer to publish it from
-the Portal. The prerequisites that live outside the build — the verified
-namespace, the signing key, the repository secrets — the local dry run and the
-troubleshooting are in [docs/release.md](docs/release.md).
+The tag is the whole release: the publication is automatic and the workflow
+finishes only once the version is live on Central, so a green run means a
+resolvable artifact. The prerequisites that live outside the build — the
+verified namespace, the signing key, the repository secrets — the local dry run
+and the troubleshooting are in [docs/release.md](docs/release.md).
 
 ## License
 
