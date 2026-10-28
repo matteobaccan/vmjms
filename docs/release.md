@@ -95,7 +95,7 @@ exposes the fourth to `maven-gpg-plugin`.
    It can take a few minutes to appear, and longer to show up in the Portal's
    search index.
 6. Check that the [`pages`](../.github/workflows/pages.yml) workflow, which
-   starts by itself once `release` ends green, has published the site at
+   the last step of `release` starts, has published the site at
    <https://matteobaccan.github.io/vmjms/> with the new version in the javadoc
    title.
 7. Open the next development version on `main`
@@ -118,10 +118,11 @@ checks out the tag, sets the POM version from it, runs `mvn javadoc:javadoc`
 and renders the README with GitHub's own Jekyll. The tooling it uses lives in
 `etc/site/` on `main`, so a tag that predates it can still be published.
 
-The workflow runs by itself after a `release` run that was started by a tag
-push and ended green. A failed release leaves the site as it was. A release
-started by hand through *workflow_dispatch* does not trigger it, so in that case,
-and whenever the site needs rebuilding, run it by hand with the tag:
+`pages` has a single trigger, *workflow_dispatch* with the tag as its input.
+The last step of `release` uses it, once the version is live on Central and
+the GitHub Release exists, whether the release was started by a tag or by hand.
+A release that fails earlier never gets there, so the site stays as it was.
+Whenever the site needs rebuilding, run it by hand with the tag:
 
 ```sh
 gh workflow run pages -f tag=v1.1.0

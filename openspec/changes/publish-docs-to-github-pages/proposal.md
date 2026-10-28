@@ -53,14 +53,16 @@ None. A documentation site is part of how the project is distributed.
 ## Impact
 
 - Affected specs: `project-distribution`
-- Affected code: a new `pages` workflow under `.github/workflows/`, a minimal
-  Jekyll configuration, and a link to the javadoc in `README.md`. No Java
-  source, no POM plugin and no test changes.
+- Affected code: a new `pages` workflow under `.github/workflows/`, a final
+  step in the `release` workflow, a minimal Jekyll configuration, and a link to
+  the javadoc in `README.md`. No Java source, no POM plugin and no test
+  changes.
 - Repository settings: GitHub Pages enabled with *GitHub Actions* as the
   source, and the *About* homepage set to the site's URL. Both are one-off
   steps by the maintainer, outside the repository.
-- No behaviour of the provider changes, and the release workflow is untouched:
-  a site that fails to build cannot stop or undo a release.
+- No behaviour of the provider changes. The release workflow gains one last
+  step that starts the site build, placed after everything it publishes, so a
+  site that fails to build cannot stop or undo a release.
 
 ## Non-Goals
 
