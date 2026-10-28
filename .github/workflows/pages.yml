@@ -1,14 +1,13 @@
 name: pages
 
 # Publishes the documentation site: the README as the home page and the javadoc
-# under /apidocs/, both from the sources of the latest release. It runs after a
-# release completes successfully, never on a failed one, so the site cannot
-# describe an api that is not on Maven Central; and it can be run by hand for a
-# tag, which rebuilds the site without publishing anything else.
+# under /apidocs/, both from the sources of a release tag. The release workflow
+# starts it as its last step, once the version is live on Maven Central, so the
+# site cannot describe an api nobody can resolve; and it can be run by hand for
+# a tag, which rebuilds the site without publishing anything else. It has no
+# other trigger: starting it takes write access to the repository, so the code
+# it checks out is always a tag the maintainer cut.
 on:
-  workflow_run:
-    workflows: [ "release" ]
-    types: [ completed ]
   workflow_dispatch:
     inputs:
       tag:
@@ -27,26 +26,22 @@ concurrency:
 
 jobs:
   pages:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       startsWith(github.event.workflow_run.head_branch, 'v'))
     runs-on: ubuntu-26.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     env:
-      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.workflow_run.head_branch }}
+      TAG: ${{ inputs.tag }}
 
     steps:
       # Two checkouts: the site tooling comes from the branch this workflow runs
-      # on, the content from the tag, which may predate the tooling.
+      # on, the content from the tag, which may predate the tooling. The tag is
+      # checked out as refs/tags/, so a branch name cannot stand in for it.
       - uses: actions/checkout@v7
 
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.workflow_run.head_sha }}
+          ref: refs/tags/${{ inputs.tag }}
           path: release
 
       - name: Set up JDK 17

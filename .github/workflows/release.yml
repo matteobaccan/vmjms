@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   release:
@@ -68,3 +69,13 @@ jobs:
             target/vmjms-${{ steps.version.outputs.version }}.jar
             target/vmjms-${{ steps.version.outputs.version }}-sources.jar
             target/vmjms-${{ steps.version.outputs.version }}-javadoc.jar
+
+      # Last, so it runs only once the version is live and released: the site
+      # documents what can be resolved, and a failure here cannot stop a
+      # publication that has already happened. The pages workflow is started
+      # from the default branch, which holds the site tooling.
+      - name: Rebuild the documentation site
+        run: gh workflow run pages -R "$GITHUB_REPOSITORY" --ref "${{ github.event.repository.default_branch }}" -f tag="$TAG"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.version) }}
