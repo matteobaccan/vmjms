@@ -27,6 +27,7 @@ Artemis or IBM MQ — only the factory you wire in changes.
 - **Group / artifact:** `it.baccan:vmjms`
 - **Base package:** `it.baccan.vmjms`
 - **Requires:** Java 17+, `jakarta.jms:jakarta.jms-api:3.1.0`
+- **API reference:** [javadoc of the latest release](https://matteobaccan.github.io/vmjms/apidocs/)
 
 ## Use cases
 
@@ -442,7 +443,10 @@ Running it on a file that already carries the header leaves it untouched.
 Pushing a `v*` tag runs the [`release`](.github/workflows/release.yml)
 workflow, which sets the POM version from the tag, builds the main, sources and
 javadoc jars, signs them, publishes them to Maven Central through the Central
-Portal and attaches them to the GitHub Release:
+Portal and attaches them to the GitHub Release. Once it succeeds, the
+[`pages`](.github/workflows/pages.yml) workflow rebuilds the
+[documentation site](https://matteobaccan.github.io/vmjms/) - this README and
+the javadoc - from the same tag:
 
 ```bash
 git tag v1.2.0 && git push origin v1.2.0
