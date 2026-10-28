@@ -94,7 +94,11 @@ exposes the fourth to `maven-gpg-plugin`.
 
    It can take a few minutes to appear, and longer to show up in the Portal's
    search index.
-6. Open the next development version on `main`
+6. Check that the [`pages`](../.github/workflows/pages.yml) workflow, which
+   starts by itself once `release` ends green, has published the site at
+   <https://matteobaccan.github.io/vmjms/> with the new version in the javadoc
+   title.
+7. Open the next development version on `main`
    (`mvn versions:set -DnewVersion=1.2.0-SNAPSHOT`, committed as
    `chore: open 1.2.0-SNAPSHOT`).
 
@@ -104,6 +108,33 @@ next patch version. Automatic publication is what 1.1.0 earned by going through
 the pipeline under inspection; the safety net is now the tag itself, so read
 what you are tagging, and use the local dry run below after any change to the
 `release` profile.
+
+## Documentation site
+
+The site at <https://matteobaccan.github.io/vmjms/> serves the README as its
+home page and the javadoc under `/apidocs/`, both from the latest release. It
+is built by the [`pages`](../.github/workflows/pages.yml) workflow, which
+checks out the tag, sets the POM version from it, runs `mvn javadoc:javadoc`
+and renders the README with GitHub's own Jekyll. The tooling it uses lives in
+`etc/site/` on `main`, so a tag that predates it can still be published.
+
+The workflow runs by itself after a `release` run that was started by a tag
+push and ended green. A failed release leaves the site as it was. A release
+started by hand through *workflow_dispatch* does not trigger it, so in that case,
+and whenever the site needs rebuilding, run it by hand with the tag:
+
+```sh
+gh workflow run pages -f tag=v1.1.0
+```
+
+That rebuilds the site and nothing else: nothing goes to Central or to the
+GitHub Release. Since the site is built from the tag, a README fix merged after
+a release appears there only with the next release.
+
+**One-off setting.** Pages must have *GitHub Actions* as its source
+(*Settings* → *Pages* → *Build and deployment*), otherwise the deploy step
+fails. The `github-pages` environment that this creates accepts deployments
+from `main`, which is the branch both triggers run the workflow from.
 
 ## Local dry run
 
