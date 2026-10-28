@@ -1,0 +1,86 @@
+name: pages
+
+# Publishes the documentation site: the README as the home page and the javadoc
+# under /apidocs/, both from the sources of the latest release. It runs after a
+# release completes successfully, never on a failed one, so the site cannot
+# describe an api that is not on Maven Central; and it can be run by hand for a
+# tag, which rebuilds the site without publishing anything else.
+on:
+  workflow_run:
+    workflows: [ "release" ]
+    types: [ completed ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish the site from (e.g. v1.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  pages:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
+    runs-on: ubuntu-26.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.workflow_run.head_branch }}
+
+    steps:
+      # Two checkouts: the site tooling comes from the branch this workflow runs
+      # on, the content from the tag, which may predate the tooling.
+      - uses: actions/checkout@v7
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.workflow_run.head_sha }}
+          path: release
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+          cache-dependency-path: release/pom.xml
+
+      - name: Set POM version from the tag
+        working-directory: release
+        run: mvn -B -ntp versions:set -DnewVersion="${TAG#v}" -DgenerateBackupPoms=false
+
+      - name: Build the javadoc
+        working-directory: release
+        run: mvn -B -ntp javadoc:javadoc
+
+      - name: Stage the site
+        working-directory: release
+        run: bash ../etc/site/stage.sh "$TAG" ../target/site-src target/reports/apidocs
+
+      - uses: actions/configure-pages@v6
+
+      - name: Build the site with Jekyll
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: target/site-src
+          destination: target/site
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: target/site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
