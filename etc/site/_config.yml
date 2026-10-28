@@ -1,0 +1,13 @@
+# Jekyll configuration of the documentation site. It is read only by the pages
+# workflow, which copies it into the staged site next to README.md and docs/;
+# the repository itself is not a Jekyll site.
+title: vmjms
+description: In-memory JMS provider for Java - Jakarta JMS 3.1 API, no broker, no network, no disk
+theme: jekyll-theme-primer
+
+# The Markdown pages are rendered to HTML; the raw sources are not published
+# next to them.
+readme_index:
+  remove_originals: true
+optional_front_matter:
+  remove_originals: true

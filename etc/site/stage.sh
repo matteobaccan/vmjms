@@ -4,23 +4,28 @@
 #
 #   etc/site/stage.sh <tag> <output-dir> [<apidocs-dir>]
 #
-# Run from the repository root. The site is an explicit list - README.md as the
-# home page, docs/ and the Jekyll configuration - so nothing else in the
-# repository is published by accident. A Markdown link to a repository file the
-# site does not carry would break once published, so it is rewritten to that
-# file on GitHub at the tag; anchors, absolute URLs and links into docs/ are
-# left alone, since they resolve on the site as they are.
+# Run from the root of a checkout of the tag. The script, the Jekyll
+# configuration and the layout next to it may come from another checkout,
+# since a tag cut before the site existed carries none of them. The site is an
+# explicit list - README.md as the home page, docs/, the javadoc and the Jekyll
+# files - so nothing else in the repository is published by accident. A
+# Markdown link to a repository file the site does not carry would break once
+# published, so it is rewritten to that file on GitHub at the tag; anchors,
+# absolute URLs and links into docs/ are left alone, since they resolve on the
+# site as they are.
 set -euo pipefail
 
 tag="${1:?usage: stage.sh <tag> <output-dir> [<apidocs-dir>]}"
 out="${2:?usage: stage.sh <tag> <output-dir> [<apidocs-dir>]}"
 apidocs="${3:-}"
+here="$(cd "$(dirname "$0")" && pwd)"
 
 rm -rf "$out"
 mkdir -p "$out"
 cp README.md "$out/"
 cp -r docs "$out/"
-cp etc/site/_config.yml "$out/"
+cp "$here/_config.yml" "$out/"
+cp -r "$here/_layouts" "$out/"
 if [ -n "$apidocs" ]; then
     cp -r "$apidocs" "$out/apidocs"
 fi
