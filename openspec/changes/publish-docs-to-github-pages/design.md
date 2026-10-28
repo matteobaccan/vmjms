@@ -96,17 +96,27 @@ There is no second javadoc configuration. The doclint rules, the warnings that
 fail the build and the missing timestamps all come from the POM, so the
 published page and the published jar are the same document.
 
-### A separate workflow, triggered by a successful release
+### A separate workflow, started by the release when it is done
 
 The site is built by a new `pages` workflow, not by an extra job in `release`.
-It has two triggers:
+Its only trigger is `workflow_dispatch` with a required `tag` input, and
+`release` uses it in its last step, `gh workflow run pages -f tag=<tag>`, after
+the version is live on Central and the GitHub Release exists. The release
+needs `actions: write` for that. A `GITHUB_TOKEN` cannot start workflows
+through most events, but `workflow_dispatch` is one of the exceptions. The same
+command, run by the maintainer, is the first publication and any rebuild.
 
-- `workflow_run` on `release` with `types: [completed]`, gated on
-  `conclusion == 'success'` and on the run having been started by a tag. The tag
-  is `github.event.workflow_run.head_branch`, and the checkout uses the run's
-  `head_sha`.
-- `workflow_dispatch` with a required `tag` input, for the first publication
-  and for rebuilding the site.
+The first version used `workflow_run` on `release` instead, and checked out the
+`head_sha` of the triggering run. CodeQL flagged it as critical
+(`actions/untrusted-checkout`), because that is the "pwn request" pattern: a
+workflow with deployment rights runs code chosen by another run. It was not
+exploitable here, since `release` only starts from a tag push or a dispatch,
+and both need write access. But the safety depended on the triggers of another
+file, and nothing in `pages` would show the risk if those triggers changed.
+With `workflow_dispatch` as its only trigger, `pages` holds the guarantee by
+itself: only someone with write access can start it, and it checks out
+`refs/tags/<tag>`, so a branch name cannot stand in for a tag. It also covers
+releases started by hand, which `workflow_run` gated on tag pushes did not.
 
 Reasons for choosing this over a job inside `release`:
 
@@ -117,8 +127,8 @@ Reasons for choosing this over a job inside `release`:
   workflow by hand would try to publish the version again, and Central refuses
   a second upload of a published version. The `pages` workflow can be run as
   often as needed.
-- **It runs from `main`.** Both triggers run the workflow file from the default
-  branch. That is what the `github-pages` environment accepts by default when
+- **It runs from `main`.** The release starts it on the default branch, and the
+  maintainer does the same. That is what the `github-pages` environment accepts by default when
   it is created. A workflow triggered by a tag push would be rejected unless the
   environment allowed tags too. It is also what lets the workflow be dispatched
   for `v1.1.0`, a tag that predates the workflow file.
@@ -129,10 +139,6 @@ from the branch the workflow runs on, and the content comes from the tag, in a
 tooling, and this was the first thing the local trial of `v1.1.0` ran into.
 Keeping the tooling on `main` also means a fix to the site applies to every
 tag.
-
-A release started by hand through *workflow_dispatch* runs on a branch, not on
-a tag, so it does not trigger the site. The maintainer runs `pages` by hand
-after it. This is recorded in `docs/release.md`.
 
 The workflow gets only the permissions that deployment requires:
 `contents: read`, `pages: write` and `id-token: write`. It belongs to a
@@ -161,6 +167,11 @@ homepage is set to the site's URL.
   form the rewrite does not recognise would break on the site. → The rewrite
   targets the inline `](path)` form, which is the only form the README uses.
   The verification checks every link on the published page.
+- **[Starting the site can turn a published release red]** If the dispatch
+  in the last step of `release` fails, the run is red although the version is
+  already on Central. → This is intended: the step comes after everything that
+  publishes, so nothing is undone, and the red run says that the site was not
+  updated. The fix is to run `pages` by hand.
 - **[The first deployment needs a manual setting]** Until the Pages source is
   set to *GitHub Actions*, the deploy step fails. → This is a one-off
   maintainer step, recorded in the tasks and in `docs/release.md`.
